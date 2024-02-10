@@ -1,0 +1,5 @@
+// Module map, allowing Swift to access Slint's private FFI
+
+module SlintFFI {
+    header "FFI.h"
+}

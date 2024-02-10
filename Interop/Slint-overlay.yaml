@@ -1,0 +1,14 @@
+---
+version: 0
+case-sensitive: false
+use-external-names: false
+roots:
+  - name: "@Slint_FFI_INCLUDE_DIR@"
+    type: directory
+    contents:
+      - name: module.modulemap
+        type: file
+        external-contents: "@Slint_MODULEMAP_FILE@"
+      - name: ffi.h
+        type: file
+        external-contents: "@Slint_FFI_HEADER@"
