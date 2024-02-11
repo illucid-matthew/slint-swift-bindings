@@ -9,6 +9,6 @@ roots:
       - name: module.modulemap
         type: file
         external-contents: "@Slint_MODULEMAP_FILE@"
-      - name: ffi.h
+      - name: FFI.h
         type: file
         external-contents: "@Slint_FFI_HEADER@"
