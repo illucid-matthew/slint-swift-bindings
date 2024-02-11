@@ -21,10 +21,14 @@ You should then see:
 
     Hello from the Swift application 🏗️!
     Hello from the Swift library! 🔨
-    Setting up timer
-    Starting event loop
+    Setting up timer ⏰ (random value: 28)
+    Starting event loop 🔁
 
-And then it will hang for 5 seconds. Then crash and die. I don't know why yet. 
+And then it will hang for 5 seconds. Then, you'll see:
+
+    Called from event loop 👍 (random value: 28)
+    Done! 🤓
+
 
 ## Structure
 

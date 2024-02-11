@@ -4,16 +4,20 @@ func test() {
     print("Hello from the Swift application 🏗️!")
     test_from_swift()
 
-    print("Setting up timer")
+    let capturedValue = Int.random(in: 0...100)
+
+    print("Setting up timer ⏰ (random value: \(capturedValue))")
 
     let timer = Timer()
     timer.run(after: 5000) {
-        print("Exiting event loop")
+        print("Called from event loop 👍 (random value: \(capturedValue))")
         StopEventLoop()
     }
 
-    print("Starting event loop")
+    print("Starting event loop 🔁")
     StartEventLoop()
+
+    print("Done! 🤓")
 }
 
 test()
