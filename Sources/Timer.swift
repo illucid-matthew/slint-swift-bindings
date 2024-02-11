@@ -66,7 +66,7 @@ public class Timer {
         
         // Perform an unbalanced retain and get an opaque pointer
         let wrapperPtr = Unmanaged<TimerCallbackWrapper>.passRetained(wrapper).toOpaque()
-        
+
         // Create the timer
         id = slint_timer_start(
             0,
@@ -98,7 +98,8 @@ public class Timer {
     private let timerCallback: TimerCallback =
     { userDataPtr in
         // Convert to instance reference
-        let wrapper = userDataPtr!.assumingMemoryBound(to: TimerCallbackWrapper.self).pointee
+        let wrapper = Unmanaged<TimerCallbackWrapper>.fromOpaque(userDataPtr!).takeUnretainedValue()
+
         // Invoke
         wrapper.invoke()
     }
