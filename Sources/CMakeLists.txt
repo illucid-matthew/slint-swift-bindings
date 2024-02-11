@@ -1,6 +1,7 @@
 list(APPEND SlintUI_LIB_SOURCE_FILES
   Slint.swift
   EventLoop.swift
+  Timer.swift
 )
 
 add_library(SlintUI ${SlintUI_LIB_SOURCE_FILES})

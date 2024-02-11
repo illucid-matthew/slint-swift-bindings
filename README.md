@@ -8,6 +8,24 @@ I'm able to build and link an application, and can call the private API from Swi
 
 Next up I guess is to implement the tests from the C++ bindings, and make them function.
 
+## Building/Running
+
+To build the example, run:
+
+    $ mkdir build && cd build
+    $ cmake .. -GNinja
+    $ cmake --build .
+    $ ./Example/Example
+
+You should then see:
+
+    Hello from the Swift application 🏗️!
+    Hello from the Swift library! 🔨
+    Setting up timer
+    Starting event loop
+
+And then it will hang for 5 seconds. Then crash and die. I don't know why yet. 
+
 ## Structure
 
 - `Bridging/`
