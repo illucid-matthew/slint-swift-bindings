@@ -7,7 +7,7 @@ add_library(SlintTests
 )
 
 # Create a library with tests
-target_link_libraries(SlintTests PUBLIC
+target_link_libraries(SlintTests PRIVATE
     SlintUI
     XCTest
 )

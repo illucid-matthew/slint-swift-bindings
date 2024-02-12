@@ -1,17 +1,7 @@
 cmake_minimum_required(VERSION 3.26)
 project(SlintSwift LANGUAGES Swift CXX)
 
-# Testing stuff: https://cliutils.gitlab.io/modern-cmake/chapters/testing.html
-# Currently NOT ENABLED, because I'm having strange issues with locating XCTest.
-# I'll figure it out later. 
-#
-# if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
-#   include(CTest)
-# endif()
-#
-# if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME AND BUILD_TESTING)
-#     add_subdirectory(Tests)
-# endif()
+include(CTest)
 
 # Do the Swift setup stuff.
 # Not strictly required, but helpful.
@@ -69,6 +59,12 @@ configure_file(Bridging/Slint-overlay.yaml "${CMAKE_CURRENT_BINARY_DIR}/Slint-ov
 target_compile_options(Slint INTERFACE
   "$<$<COMPILE_LANGUAGE:Swift>:SHELL:-vfsoverlay ${CMAKE_CURRENT_BINARY_DIR}/Slint-overlay.yaml -cxx-interoperability-mode=default -Xcc -std=c++20>")
 
+add_subdirectory(Sources)
+add_subdirectory(Example)
 
-add_subdirectory("Sources/")
-add_subdirectory("Example/")
+# CMake still cannot find XCTest, grrr…
+#
+# if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME AND BUILD_TESTING)
+#   enable_testing()
+#   add_subdirectory(Tests)
+# endif()

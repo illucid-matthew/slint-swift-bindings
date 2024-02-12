@@ -12,10 +12,10 @@ Next up I guess is to implement the tests from the C++ bindings, and make them f
 
 To build the example, run:
 
-    $ mkdir build && cd build
-    $ cmake .. -GNinja
-    $ cmake --build .
-    $ ./Example/Example
+    $ mkdir build
+    $ cmake -B build -GNinja
+    $ cmake --build build
+    $ ./build/Example/Example
 
 You should then see:
 
