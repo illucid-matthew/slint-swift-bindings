@@ -24,9 +24,21 @@ include(InitializeSwift)
 # cmake/modules/AddSwift.cmake provides the function for creating the Swift to C++ bridging header
 include(AddSwift)
 
+find_package(dispatch CONFIG QUIET)
+find_package(Foundation CONFIG QUIET)
+
 # Bring in Slint's C++ bindings.
 # We're not really interested in the C++ bindings themselves, but the private headers and symbols.
 include(FetchContent)
+
+# message("Fetching swift-atomics…")
+# FetchContent_Declare(
+#  swift_atomics
+#  GIT_REPOSITORY https://github.com/apple/swift-atomics
+#  GIT_TAG 1.2.0
+#  GIT_SHALLOW TRUE
+#)
+#FetchContent_MakeAvailable(swift_atomics)
 
 message("Fetching Slint…")
 FetchContent_Declare(

@@ -5,17 +5,31 @@
 // Created by Matthew Taylor on 2/10/24.
 //
 
-// This file is temporary. It only exists to expose some low-leve functions for testing.
-
 import SlintFFI
 
-// 🤓 ERHM ACHUALLY these functions should be @MainActor, cuz the API isn't threadsafe and Slint will panic if called from another thread.
-// But that's a barrel of balls, and without doing any async that's not really a concern at the moment.
+/// Interface for the event loop.
+class EventLoop {
+    public static var shared = EventLoop()
 
-public func StartEventLoop() {
-    slint_run_event_loop(false)
-}
+    private var started = AsyncChannel(Void.self)
 
-public func StopEventLoop() {
-    slint_quit_event_loop()
+    private init() { }
+
+    public var ready: Void {
+        get async { try! await started.value }
+    }
+
+    @MainActor
+    public func start() {
+        startBeforeLoopRunning { [self] in
+            started.send()
+        }
+        print("Starting event loop.")
+        slint_run_event_loop(false)
+    }
+
+    @SlintActor
+    public func stop() {
+        slint_quit_event_loop()
+    }
 }

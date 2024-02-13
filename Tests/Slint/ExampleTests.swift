@@ -8,7 +8,9 @@ final class ExampleTests: XCTestCase {
         XCTAssertEqual(true, true)
     }
 
+#if MANUAL_TEST_DISCOVERY
     static var allTests = [
         ("testExample", testExample),
     ]
+#endif
 }
