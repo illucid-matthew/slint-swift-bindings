@@ -33,13 +33,14 @@ public class Timer {
     public var running: Bool {
         guard id != nil else { return false }
         
+        // TODO
         return false
     }
 
     /// Internal function, starts timer from the Slint event loop context.
     private func start(mode: TimerMode, duration: UInt64, closure: @escaping @Sendable () -> Void) {
         // Clean up existing timer, if any.
-        if id != nil { }
+        if id != nil { /* TODO */ }
 
         // Create a wraper.
         let wrapper = WrappedClosure(closure)

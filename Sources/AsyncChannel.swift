@@ -20,7 +20,7 @@ public final class AsyncChannel<T> {
     /// Initializer. Allows you to specify the type as an argument to the constructor.
     /// 
     /// ```swift
-    /// let channel = AsyncChannel(Int)
+    /// let channel = AsyncChannel(Int.self)
     /// ```
     public init(_ elementType: T.Type = T.self) { }
 
