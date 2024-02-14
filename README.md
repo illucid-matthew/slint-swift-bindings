@@ -17,7 +17,8 @@ To build the example, run:
     $ cmake --build build
     $ ./build/Example/Example
 
-You should then see:
+~~You should then see:~~
+_Note: This is out of date._
 
     Hello from the Swift application 🏗️!
     Hello from the Swift library! 🔨

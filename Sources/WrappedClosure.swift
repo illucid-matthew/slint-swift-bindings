@@ -91,8 +91,6 @@ class WrappedClosure {
     /// Closure that invokes a callback.
     public static let invokeCallback: GenericInvokeCallback = { userDataPtr in
 
-        print("Invoked callback for\t\t\t\t\(String(describing: userDataPtr!))")
-
         // Get a reference to this instance from an opaque pointer.
         let wrapper = Unmanaged<WrappedClosure>.fromOpaque(userDataPtr!).takeUnretainedValue()
 
@@ -103,8 +101,6 @@ class WrappedClosure {
     /// Drop user data callback. Releases the wrapper.
     public static let dropCallback: DropUserDataCallback = { userDataPtr in
         
-        print("Dropping data for\t\t\t\t\(String(describing: userDataPtr!))")
-
         // Get a reference to this instance from an opaque pointer, and release it.
         Unmanaged<WrappedClosure>.fromOpaque(userDataPtr!).release()
     }

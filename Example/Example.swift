@@ -3,26 +3,33 @@ import SlintUI
 func test() async {
     print("Hello from the Swift application 🏗️!")
 
-    let capturedValue = Int.random(in: 0...100)
-
-    let channel = AsyncChannel(Void.self)
-
     let timer = Timer()
 
+    let channel1 = AsyncChannel(Void.self)
+
     print("🚨 Setting up timer")
-    timer.willRun(after: 100) {
-        print("Called from event loop 👍 (random value: \(capturedValue))")
+    timer.willRun(after: 1000) {
+        print("👍 The first timer was ran!")
+        channel1.send()
     }
 
-    try! await Task.sleep(nanoseconds: 550_000_000)
-    print("✨")
+    print("⏰ Waiting for the first timer to fire…")
+    try! await channel1.value
 
+    let channel2 = AsyncChannel(Void.self)
     print("🚨 Setting a different timer")
-    timer.willRun(after: 100) {
-        print("2 Called from event loop 👍 (random value: \(capturedValue))")
+    timer.willRun(after: 1500) {
+        print("👍 The second timer was ran!")
+        channel2.send()
     }
 
-    print("Done! 🤓")
+    try! await channel2.value
+
+    timer.willRun(every: 1000) {
+        print("🐦‍⬛ Is this getting annoying?")
+    }
+
+    print("🤓 Done!")
 }
 
 @main

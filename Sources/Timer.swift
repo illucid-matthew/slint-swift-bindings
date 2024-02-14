@@ -39,17 +39,15 @@ public class Timer {
     /// Internal function, starts timer from the Slint event loop context.
     private func start(mode: TimerMode, duration: UInt64, closure: @escaping @Sendable () -> Void) {
         // Clean up existing timer, if any.
-        if id != nil {
-
-        }
+        if id != nil { }
 
         // Create a wraper.
-        let wrapperPointer = WrappedClosure(closure).getRetainedPointer()
+        let wrapper = WrappedClosure(closure)
 
-        print("About to start a task to create a timer\t\t\(String(describing: wrapperPointer))")
+        let wrapperPointer = wrapper.getRetainedPointer()
 
         // Start the timer from the Slint event loop context.
-        // Task { @SlintActor [self] in
+        Task { @SlintActor [self] in
             id = slint_timer_start(
                 0,                        // Assign a new ID. Docs erroneously say `-1` is the correct value. 
                 mode,                           // Mode, either oneshot or repeating.
@@ -58,7 +56,6 @@ public class Timer {
                 wrapperPointer,   // Pointer to the wrapper.
                 WrappedClosure.dropCallback     // Callback to release the wrapper.
             )
-            print("Timer set up (ID: \(id!))")
-        // }
+        }
     }
 }

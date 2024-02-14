@@ -5,6 +5,8 @@
 //  Created by Matthew Taylor on 2/10/24.
 //
 
+import SlintFFI
+
 /// TEMPORARY. Protocol for Slint apps.
 /// 
 /// Starts the Slint event loop, then enters your code.
@@ -25,7 +27,8 @@ public protocol SlintApp {
 public extension SlintApp {
     /// Default implementation for `main()`, starting the event loop and concurrently running `start()`.
     static func main() async {
-        // Run as detached task, so it runs independently of this task.
+        
+        // Task to run `start()`
         Task {
             // Wait for the event loop to be ready before proceding.
             print("Waiting for loop to be ready…")
@@ -39,7 +42,23 @@ public extension SlintApp {
             // print("Stopped!")
         }
 
+        // Task to make the damn thing process timers
+        let idleTask = Task {
+            await EventLoop.ready
+
+            while !Task.isCancelled {
+                // Sleep for 1ms
+                try! await Task.sleep(nanoseconds: 1_000_000)
+
+                // Make Slint do something
+                await { @SlintActor in
+                    slint_platform_update_timers_and_animations()
+                }()
+            }
+        }
+
         // Start the event loop. This run on the main actor and block (basically) forever.
         await EventLoop.start()
+        idleTask.cancel()
     }
 }
