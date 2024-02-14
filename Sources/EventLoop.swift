@@ -77,3 +77,18 @@ public class EventLoop {
         print("Event loop has stopped.")
     }
 }
+
+// I'm running into an issue where the event loop isn't ready before we start running tasks on it, causing panics.
+// So I need to somehow hold back execution until the event loop is ready. I can't use `slint_post_event`, because it checks.
+// 
+// But Slint timers don't. So I can manually create a timer that will run immediately once the event loop is ready.
+// The only problem is that `Timer` uses the `@SlintActor` attribute, which depends on the event loop running.
+//
+// So we have a mini-version of timer here. Just enough to run a callback when the event loop starts.
+
+/// Sets up a timer that runs immediately once the Slint event loop is ready.
+/// This MUST ONLY be used before the event loop is started!
+func startBeforeLoopRunning(_ closure: @escaping @Sendable () -> Void) {
+    let wrapper = WrappedClosure(closure)
+    slint_timer_singleshot(0, WrappedClosure.invokeCallback, wrapper.getRetainedPointer(), WrappedClosure.dropCallback)
+}
