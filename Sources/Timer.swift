@@ -7,36 +7,59 @@
 
 import SlintFFI
 
-/// Wrapper around a timer callback.
-class GenericClosureWrapper {
-    private let _invoke: () -> Void
-    init(_ closure: @escaping () -> Void) { _invoke = closure }
-    func invoke() { _invoke() }
-}
-
 /// Timer that can invoke a callback, once or periodically.
 public class Timer {
-    public init() {
-
-    }
-
-    /// Type alias for the timer callback.
-    fileprivate typealias TimerCallback = (@convention(c) (UnsafeMutableRawPointer?) -> Void)?
+    /// Timer ID. Used a handle for the Slint FFI. 
+    private var id: UInt?
+    /// Initializer.
+    public init() { }
     
-    /// Type alias for the `drop_user_data` callback.
-    fileprivate typealias DropUserDataCallback = (@convention(c) (UnsafeMutableRawPointer?) -> Void)?
-
-    /// Timer callback. Calls the wrapped closure.
-    fileprivate static let timerCallback: TimerCallback = { userDataPtr in
-        print("Greetings from `timerCallback`")
-        let wrapper = Unmanaged<GenericClosureWrapper>.fromOpaque(userDataPtr!).takeUnretainedValue()
-        wrapper.invoke()
+    /// Sets up a single-shot timer to run after a set number of milliseconds.
+    /// - Parameters:
+    ///   - duration: Milliseconds until the closure should be called.
+    ///   - closure: The closure to call.
+    public func willRun(after duration: UInt64, _ closure: @escaping @Sendable () -> Void) {
+        start(mode: TimerMode.SingleShot, duration: duration, closure: closure)
     }
 
-    /// Drop user data callback. Releases the wrapper.
-    fileprivate static let dropUserDataCallback: DropUserDataCallback = { userDataPtr in
-        print("Greetings from `dropUserDataCallback`")
-        _ = Unmanaged<GenericClosureWrapper>.fromOpaque(userDataPtr!).takeRetainedValue()
+    /// Sets up a repeating timer to run periodically after a set number of milliseconds.
+    /// - Parameters:
+    ///   - duration: Milliseconds until the closure should be called.
+    ///   - closure: The closure to call.
+    public func willRun(every duration: UInt64, _ closure: @escaping @Sendable () -> Void) {
+        start(mode: TimerMode.Repeated, duration: duration, closure: closure)
+    }
+
+    public var running: Bool {
+        guard id != nil else { return false }
+        
+        return false
+    }
+
+    /// Internal function, starts timer from the Slint event loop context.
+    private func start(mode: TimerMode, duration: UInt64, closure: @escaping @Sendable () -> Void) {
+        // Clean up existing timer, if any.
+        if id != nil {
+
+        }
+
+        // Create a wraper.
+        let wrapperPointer = WrappedClosure(closure).getRetainedPointer()
+
+        print("About to start a task to create a timer\t\t\(String(describing: wrapperPointer))")
+
+        // Start the timer from the Slint event loop context.
+        // Task { @SlintActor [self] in
+            id = slint_timer_start(
+                0,                        // Assign a new ID. Docs erroneously say `-1` is the correct value. 
+                mode,                           // Mode, either oneshot or repeating.
+                duration,                       // Period, in milliseconds.
+                WrappedClosure.invokeCallback,  // Callback to invoke the closure.
+                wrapperPointer,   // Pointer to the wrapper.
+                WrappedClosure.dropCallback     // Callback to release the wrapper.
+            )
+            print("Timer set up (ID: \(id!))")
+        // }
     }
 }
 
@@ -47,15 +70,12 @@ public class Timer {
 // The only problem is that `Timer` uses the `@SlintActor` attribute, which depends on the event loop running.
 //
 // So we have a mini-version of timer here. Just enough to run a callback when the event loop starts.
+//
+// Additionally, Swift balks when the same FFI call is made in different files. So this has to live here.
 
 /// Sets up a timer that runs immediately once the Slint event loop is ready.
 /// This MUST ONLY be used before the event loop is started!
-func startBeforeLoopRunning(_ closure: @escaping () -> Void) {
-    let wrapper = GenericClosureWrapper {
-        print("Greetings from `startBeforeLoopRunning`")
-        closure()
-    }
-    let wrapperPtr = Unmanaged<GenericClosureWrapper>.passRetained(wrapper).toOpaque()
-    print("Starting timer…")
-    _ = slint_timer_start(0, TimerMode.SingleShot, 0, Timer.timerCallback, wrapperPtr, Timer.dropUserDataCallback)
+func startBeforeLoopRunning(_ closure: @escaping @Sendable () -> Void) {
+    let wrapper = WrappedClosure(closure)
+    slint_timer_singleshot(0, WrappedClosure.invokeCallback, wrapper.getRetainedPointer(), WrappedClosure.dropCallback)
 }

@@ -1,18 +1,18 @@
 //
-// Slint.swift
-// slint
+//  Slint.swift
+//  slint
 //
-// Created by Matthew Taylor on 2/10/24.
+//  Created by Matthew Taylor on 2/10/24.
 //
 
-/// Protocol for Slint apps.
+/// TEMPORARY. Protocol for Slint apps.
 /// 
 /// Starts the Slint event loop, then enters your code.
 /// 
 /// ```swift
 /// @main
 /// struct MyApp: SlintApp {
-///     static func start() async {…}
+///     static func start() {…}
 /// }
 /// ```
 /// 
@@ -23,12 +23,13 @@ public protocol SlintApp {
 }
 
 public extension SlintApp {
+    /// Default implementation for `main()`, starting the event loop and concurrently running `start()`.
     static func main() async {
         // Run as detached task, so it runs independently of this task.
-        Task.detached {
+        Task {
             // Wait for the event loop to be ready before proceding.
             print("Waiting for loop to be ready…")
-            await EventLoop.shared.ready
+            await EventLoop.ready
             
             print("Loop became ready, calling start().")
             try! await start()
@@ -39,6 +40,6 @@ public extension SlintApp {
         }
 
         // Start the event loop. This run on the main actor and block (basically) forever.
-        await EventLoop.shared.start()
+        await EventLoop.start()
     }
 }

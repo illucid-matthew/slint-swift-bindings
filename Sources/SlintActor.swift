@@ -1,8 +1,8 @@
 //
-// SlintActor.swift
-// slint
+//  SlintActor.swift
+//  slint
 //
-// Created by Matthew Taylor on 2/12/24.
+//  Created by Matthew Taylor on 2/12/24.
 //
 
 /// This was more difficult that it should have been.
@@ -17,15 +17,6 @@
 
 import SlintFFI
 
-/// Wrapper for an event. This is necessary because the closure that runs the job needs to capture a reference to the event loop.
-private class SlintEventLoopEventWrapper {
-    private let _invoke: () -> Void
-    init(_ event: @escaping @Sendable () -> Void) {
-        _invoke = event
-    }
-    func invoke() { _invoke() }
-}
-
 /// Executor that takes queued jobs and posts them to Slint's event loop.
 final class SlintEventLoopExecutor: SerialExecutor {
     /// Private initializer.
@@ -34,50 +25,27 @@ final class SlintEventLoopExecutor: SerialExecutor {
     /// A singleton instance of this Executor.
     public static let shared = SlintEventLoopExecutor()
 
-    /// Required by `SerialExecutor`.
+    /// Execute the job in the Slint event loop. Required by `SerialExecutor`.
     public func enqueue(_ job: consuming ExecutorJob) {
-        postJobEvent(UnownedJob(job))
+
+        let unownedJob = UnownedJob(job)
+
+        let wrapper = WrappedClosure {
+            unownedJob.runSynchronously(on: self.asUnownedSerialExecutor())
+        }
+
+        // Post as an event
+        slint_post_event(
+            WrappedClosure.invokeCallback,
+            wrapper.getRetainedPointer(),
+            WrappedClosure.dropCallback
+        )
     }
 
     /// Get an unowned reference to the shared instance.
+    @inlinable
     public func asUnownedSerialExecutor() -> UnownedSerialExecutor {
         return UnownedSerialExecutor(ordinary: self)
-    }
-
-    private typealias SlintEventCallback = (@convention(c) (UnsafeMutableRawPointer?) -> Void)?
-    private typealias SlintDropUserDataCallback = (@convention(c) (UnsafeMutableRawPointer?) -> Void)?
-
-    private let slintEventCallback: SlintEventCallback =
-    { userDataPtr in
-        // Convert to instance reference
-        let wrapper = Unmanaged<SlintEventLoopEventWrapper>.fromOpaque(userDataPtr!).takeUnretainedValue()
-        
-        // Invoke
-        wrapper.invoke()
-    }
-
-    private let slintDropUserDataCallback: SlintDropUserDataCallback =
-    { userDataPtr in
-        // Convert the raw pointer to an unmanaged reference and release
-        _ = Unmanaged<SlintEventLoopEventWrapper>.fromOpaque(userDataPtr!).takeRetainedValue()
-    }
-
-    /// Take the unowned job, and post it as an event for Slint.
-    private func postJobEvent(_ job: UnownedJob) {
-        // Create a wrapper that runs the job.
-        let wrapper = SlintEventLoopEventWrapper {
-            job.runSynchronously(on: self.asUnownedSerialExecutor())
-        }
-
-        // Get an unmanaged reference to it.
-        let wrapperPtr = Unmanaged.passRetained(wrapper).toOpaque()
-
-        // Post the event
-        slint_post_event(
-            slintEventCallback,
-            wrapperPtr,
-            slintDropUserDataCallback
-        )
     }
 }
 

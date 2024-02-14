@@ -1,11 +1,13 @@
 //
-// Promise.swift
-// slint
+//  AsyncChannel.swift
+//  slint
 //
-// Borrowed by Matthew Taylor on 2/12/24.
-// Borrowed from: https://stackoverflow.com/a/73082638
+//  Borrowed by Matthew Taylor on 2/13/24.
+//  Original: https://github.com/alexito4/AsyncChannel
 
 import Foundation
+
+// TODO: Use https://github.com/SwiftyLab/AsyncObjects ?
 
 /// Asynchronous channel, allowing synchronous code to pass values to async code.
 /// This is vital for passing values from the Slint event loop back to the main Swift code.
@@ -15,6 +17,11 @@ import Foundation
 public final class AsyncChannel<T> {
     private let buffer = Buffer()
 
+    /// Initializer. Allows you to specify the type as an argument to the constructor.
+    /// 
+    /// ```swift
+    /// let channel = AsyncChannel(Int)
+    /// ```
     public init(_ elementType: T.Type = T.self) { }
 
     /// Get the value asynchronously.

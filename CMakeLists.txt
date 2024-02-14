@@ -69,7 +69,7 @@ configure_file(Bridging/Slint-overlay.yaml "${CMAKE_CURRENT_BINARY_DIR}/Slint-ov
 # 2. Enables C++ interop for Swift
 # 3. Pass required C++ version to the Clang compiler
 target_compile_options(Slint INTERFACE
-  "$<$<COMPILE_LANGUAGE:Swift>:SHELL:-vfsoverlay ${CMAKE_CURRENT_BINARY_DIR}/Slint-overlay.yaml -cxx-interoperability-mode=default -Xcc -std=c++20>")
+  "$<$<COMPILE_LANGUAGE:Swift>:SHELL:-vfsoverlay ${CMAKE_CURRENT_BINARY_DIR}/Slint-overlay.yaml -cxx-interoperability-mode=default -g -Xcc -std=c++20>")
 
 add_subdirectory(Sources)
 add_subdirectory(Example)
