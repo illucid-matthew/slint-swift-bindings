@@ -19,20 +19,26 @@
 /// To use this, implement `start()`. This function will be run at startup, in a seperate task.
 /// When it returns, the Slint event loop will be closed, and the application will exit.
 public protocol SlintApp {
-    static func start() async
+    static func start() async throws
 }
 
 public extension SlintApp {
     static func main() async {
         // Run as detached task, so it runs independently of this task.
         Task.detached {
-            // Start the event loop. This run on the main actor and block (basically) forever.
-            await EventLoop.shared.start()
+            // Wait for the event loop to be ready before proceding.
+            print("Waiting for loop to be ready…")
+            await EventLoop.shared.ready
+            
+            print("Loop became ready, calling start().")
+            try! await start()
+
+            // Why does this crash?
+            // await EventLoop.shared.stop()
+            // print("Stopped!")
         }
 
-        // Wait for the event loop to be ready before proceding.
-        print("Waiting for loop to be ready…")
-        await EventLoop.shared.ready
-        print("Loop became ready.")   
+        // Start the event loop. This run on the main actor and block (basically) forever.
+        await EventLoop.shared.start()
     }
 }
