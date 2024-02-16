@@ -32,6 +32,7 @@ IMPORT_PRIVATE_SLINT_TYPE(Clipboard)
 IMPORT_PRIVATE_SLINT_TYPE(CppRawHandleOpaque)
 IMPORT_PRIVATE_SLINT_TYPE(IntSize)
 IMPORT_PRIVATE_SLINT_TYPE(IntRect)
+IMPORT_PRIVATE_SLINT_TYPE(ItemVTable)
 IMPORT_PRIVATE_SLINT_TYPE(LayoutConstraintsReprC)
 IMPORT_PRIVATE_SLINT_TYPE(PlatformTaskOpaque)
 IMPORT_PRIVATE_SLINT_TYPE(PlatformUserData)
@@ -266,6 +267,3 @@ bool slint_timer_running(uintptr_t id) {
     return slint::cbindgen_private::slint_timer_running(id);
 }
 
-//
-//
-//

@@ -35,29 +35,6 @@ public class EventLoop {
     public static var ready: Void {
         get async { try! await shared.started.value }
     }
-
-    /// Run a throwing closure in the Slint event loop, and await its return.
-    /// - Parameter closure: Closure to run in the Slint event loop.
-    /// - Returns: The result of the closure, or an error.
-    /*
-    @discardableResult
-    public static func run<Ret>(_ closure: @escaping @Sendable () throws -> (Ret)) async -> Result<Ret, Error> {
-        // Create a channel for the result.
-        let channel = AsyncChannel( Result<Ret, Error>.self )
-
-        // Create a task that will send a result, running from the Slint event loop.
-        await { @SlintActor in
-            channel.send( Result { try closure() } )
-        }()
-
-        // If we can get the result, return it. Otherwise return cancellation error.
-        if let result = try? await channel.value {
-            return result
-        } else {
-            return Result { throw CancellationError() }
-        }
-    }
-    */
     
     /// Start the main event loop. This WILL block the main thread for the rest of the program!
     @MainActor

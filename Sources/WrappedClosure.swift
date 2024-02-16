@@ -15,25 +15,32 @@ import Foundation
 /// Note: this is only meant for Slint APIs which expected you to pass a function pointer to them.
 /// If you just need to run something in the Slint event loop, use `EventLoop.run(_:)` or `@SlintActor`.
 class WrappedClosure {
-    /// Wrapped closure value.
-    private let invoke: () -> Void
+    /// Wrapped closure value. Runs with `SlintActor` isolation.
+    private let invoke: @SlintActor () -> Void
+    /// Reference to thing. Used to allow timers to hold a reference without dying.
+    private var ref: AnyObject? = nil
 
     /// Initializer. Stores the closure.
     /// - Parameter closure: The Swift closure to wrap.
     /// 
     /// If you need to save the value, use `withResult(_:)` or `withResultThrowing(_:)`.
-    init(_ closure: @escaping @Sendable () -> Void) {
+    init(_ closure: @SlintActor @escaping @Sendable () -> Void) {
         invoke = {
             assert(Thread.current.isMainThread, "Closure not running on main thread!")
             closure()
         }
+    }
+
+    /// Stupid way to ensure that an object doesn't disappear.
+    public func holdOntoThis(_ thing: AnyObject) {
+        ref = thing
     }
    
     /// Factory function. Creates a wrapped closure that captures a value.
     /// - Parameter closure: A closure that returns a value.
     /// - Returns:  A tuple of a wrapper instance, and a channel to recieve the value.
     static func withResult<Ret>(
-        _ closure: @escaping @Sendable () -> Ret
+        _ closure: @SlintActor @escaping @Sendable () -> Ret
     ) -> (WrappedClosure, AsyncChannel<Ret>) {
 
         // Channel for returning a value.
@@ -53,7 +60,7 @@ class WrappedClosure {
     /// - Parameter closure: A closure that returns a value and may throw.
     /// - Returns: A tuple of a wrapper instance, and a channel to recieve a result.
     static func withResultThrowing<Ret>(
-        _ closure: @escaping @Sendable () throws -> Ret
+        _ closure: @SlintActor @escaping @Sendable () throws -> Ret
     ) -> (WrappedClosure, AsyncChannel<Result<Ret, Error>>) {
 
         // Channel for returning a value.
@@ -94,8 +101,15 @@ class WrappedClosure {
         // Get a reference to this instance from an opaque pointer.
         let wrapper = Unmanaged<WrappedClosure>.fromOpaque(userDataPtr!).takeUnretainedValue()
 
-        // Invoke the wrapped closure.
-        wrapper.invoke()
+        // This is nasty and quite gross, but necessary.
+        // We _are_ in the SlintActor isolation context, but Swift does not let us tell it so!
+        // See here: https://github.com/apple/swift-evolution/blob/main/proposals/0392-custom-actor-executors.md#assuming-actor-executors
+        
+        // Inspired by: https://forums.swift.org/t/se-0392-custom-actor-executors/63599/26
+        // Basically, make Swift ignore the `@SlintActor` isolation by FORCING a type cast.
+
+        // Sometimes, you just need a sledgehammer 🔨
+        unsafeBitCast(wrapper.invoke, to: (() -> Void).self)()
     }
 
     /// Drop user data callback. Releases the wrapper.

@@ -44,7 +44,7 @@ message("Fetching Slint…")
 FetchContent_Declare(
   Slint_CPP
   GIT_REPOSITORY https://github.com/slint-ui/slint.git
-  GIT_TAG release/1
+  GIT_TAG v1.4.1  # Since we're using the internal API, stability is not guaranteed. We must use a specific version.
   GIT_SHALLOW TRUE
 
   SOURCE_SUBDIR api/cpp

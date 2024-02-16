@@ -7,13 +7,12 @@
 
 import Foundation
 
-// TODO: Use https://github.com/SwiftyLab/AsyncObjects ?
-
 /// Asynchronous channel, allowing synchronous code to pass values to async code.
-/// This is vital for passing values from the Slint event loop back to the main Swift code.
+/// This is used for passing values from the Slint event loop back to the main Swift code before
+/// the event loop is running and `SlintActor` is available.
 ///
 /// See: https://alejandromp.com/blog/building-a-channel-with-swift-concurrency-continuations/
-/// 
+///
 public final class AsyncChannel<T> {
     private let buffer = Buffer()
 

@@ -2,11 +2,43 @@
 
 Attempt at creating bindings for Slint in Swift, re-using the private FFI interface meant for the C++ bindings.
 
+See also: [WIP Python bindings](https://github.com/slint-ui/slint/pull/4155)
+
 __Status__: 🚧 _Under construction_.
 
-I'm able to build and link an application, and can call the private API from Swift.
+Currently implemented:
 
-Next up I guess is to implement the tests from the C++ bindings, and make them function.
+- [x] Prerequisites
+    - [x] Include Slint as CMake dependency
+    - [x] Create module map for Slint FFI headers[^1]
+    - [x] Configure build to enable Swift-C++ interop
+    - [x] Call Slint FFI from Swift
+    - [ ] Testing
+- [ ] Core Library
+    - [x] Starting and stopping the event loop
+    - [x] Running callbacks from the event loop
+    - [ ] Timers
+    - [ ] Core type conversions
+        - [ ] Callback
+        - [ ] Shared string
+        - [ ] Shared vector
+        - [ ] Property
+        - [ ] Property tracker
+        - [ ] Path
+        - [ ] Image
+        - [ ] Color
+        - [ ] Brush
+- [ ] Interpreter
+    - [ ] Value
+    - [ ] Struct
+    - [ ] Model
+    - [ ] Component compiler
+    - [ ] Component definition (created by component compiler)
+    - [ ] Component (created from component definition)
+
+> Note: List is weakly orderd.
+
+[^1]: The foreign-function interface (FFI) uses C calling convention, but the generated headers are C++. Swift will not import any `extern "C"` symbols when C++ interop is enabled, so a bridging header is used to make them accessible.
 
 ## Building/Running
 
@@ -30,33 +62,140 @@ And then it will hang for 5 seconds. Then, you'll see:
     Called from event loop 👍 (random value: 28)
     Done! 🤓
 
+## How It Works
 
-## Structure
+### Swift Interop
 
-- `Bridging/`
-    - `FFI.h`: Umbrella header that imports Slint's private FFI.
-    - `Slint.modulemap`: Module map, so Swift can import the Slint library.
-    - `Slint-overlay.yaml`: The module map and bridging header are overlaid instead of copied into `slint-cpp`.
-- `Sources/`
-    - `Slint.swift`: Nexus point of the library.
-    - `….swift`: Slint bindings, providing a marginally nicer API.
-- `Tests/`
-    - Currently under construction. Does not yet work.
-- `Example/`
-    - Small example application. Just used for development.
-
-## How It's Made
-
-- The C++ library is built following the example Slint C++ template.
-- A module map and bridging header is overlaid where Slint was built.
+- The C++ library is built by CMake, following the example Slint C++ template.
+- A module map and bridging header are overlaid where Slint was built.
 - The modulemap allows Swift to import Slint's FFI as `SlintFFI`.
 - A Swift library CMake target is created, linking to Slint.
 - Applications can link to that library.
 
-Note that Swift won't import functions or types that are marked `extern "C"` when in C++ interop mode.
+Swift won't import functions or types that are marked `extern "C"` when in C++ interop mode.
 They must be bridged to C++ in a header before they are accessible.
 
-## The FFI
+This is why there is a bridging header.
+Additionaly, the bridging header allows for types to be accessed from the global namespace, instead of `slint::cbindgen_private::…`.
+
+### Event Loop and Actor Isolation
+
+Generally, Slint APIs can only be used from the main thread.
+This is meant to prevent data races when the framework and application are concurrently accessing the UI state.
+
+Swift's concurrency model generalizes this into _actors_.
+An actor can only do one thing at a time.
+
+There are actually two types of actors:
+- Instance actors
+- Global actors
+ 
+Instance actors are special classes that ensure their mutable state can only be accessed from one place at a time.
+
+Global actors ensure only one piece of code can be running at a time.
+Code run by a global actor is said to be _isolated_ to that actor, or running it the actor's _isolation context_.
+
+Since Slint APIs can only be used from the main thread, we could say that they're isolated to the _main actor_.
+But that runs into a problem at runtime.
+
+To start Slint's event loop, the library calls a function named `slint_run_event_loop()` on the main thread.
+This function _blocks_, meaning no other code can run on the main thread until it returns.
+
+So, how do you access Slint's APIs?
+They must be called from the main thread, but the event loop blocks the main thread!
+
+Slint does have a solution: `slint_post_event()`, which can run from _any_ thread.
+This function allows us to run code from the Slint event loop, and thus, the main thread.
+Finally, we can use those APIs!
+
+But manually using `slint_post_event()` _every time_ we want to interact with Slint would be tedious and error-prone.
+Thankfully, Swift allows us to define our own global actor for this very use!
+
+Enter `SlintActor`.
+Take the `Timer` class for example.
+```swift
+@SlintActor
+class Timer {
+    var id
+    func start()
+    func stop()
+    func restart()
+}
+```
+
+The `@SlintActor` attribute tells Swift that any code that accesses `Timer` must be executed by `SlintActor`.
+Because actors can only do one thing at a time, only one piece of code can be accessing `Timer` at any point in time.
+This attribute can be applied to any type, including functions.
+
+Any code run by `SlintActor` can immediately access a `Timer`, because it's already isolated to `SlintActor`.
+Code running outside of `SlintActor` can access it, but must wait.
+
+```swift
+func someTask() {
+    // Because this code is running from a different
+    // context, it must wait to get access to the timer.
+    await someTimer.restart()
+}
+
+@SlintActor
+func runningFromEventLoop() {
+    // Because this code is running from the same isolation
+    // context, it can access the timer without waiting.
+    someTimer.start()
+}
+```
+
+In Swift, it's common to pass around closures, providing code to run in a different location.
+This is used in place of callbacks and function pointers, and provide a richer set of features.
+
+```swift
+struct WorkItem {
+    var whatToDo: () -> Void
+}
+
+let someWork = WorkItem(whatToDo: {
+    print("Hello there!")
+})
+
+// Later…
+someWork.whatToDo()
+```
+
+When defining a closure's type, we can apply attributes, same as functions.
+This allows us to provide Swift with more information about how the closure will be used.
+
+This is used all over the place in the Swift bindings.
+To return to `Timer`:
+```swift
+class Timer {
+    …
+    func start(after: Int, do: @SlintActor @escaping () -> Void) { … }
+}
+```
+
+By using the `@SlintActor` attribute in the closure's type signature, we tell Swift that the closure will be ran in the isolation context of `SlintActor`.
+This means the closure can access isolated types like `Timer` _without_ waiting, or explicitly requesting isolation!
+
+```swift
+// Outside of `SlintActor` isolation, this code must wait to call `start()`
+await anotherTimer.start(after: 10) {
+
+    // But this code will always be isolated, so it doesn't have to wait!
+    anotherTimer.restart()
+}
+```
+
+So, to ensure safety, all types that directly call Slint's API are marked `@SlintActor`. This guarentees they will never attempt to call the Slint API from outside the main thread.
+
+This is directly integrated into the Swift concurrency model, so you can use asynchronous code in your application without worry.
+
+___That said___, any Swift code that attempts to run isolated to `@MainActor` will still have to wait until the event loop stops.
+If it becomes an issue, it may be possible to use `MainActor.assumeIsolated()` and `isSameExclusiveExecutionContext()` to 'prove' that `SlintActor` is basically equivalent to `MainActor`.
+Or maybe [this will save us](https://github.com/apple/swift-evolution/blob/main/proposals/0392-custom-actor-executors.md#overriding-the-mainactor-executor).
+
+## Addendums
+
+### The FFI
 
 The FFI interface is generated by the `cbindgen`, which analyzes the Slint crates to find things to bridge.
 
