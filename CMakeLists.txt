@@ -24,9 +24,6 @@ include(InitializeSwift)
 # cmake/modules/AddSwift.cmake provides the function for creating the Swift to C++ bridging header
 include(AddSwift)
 
-find_package(dispatch CONFIG QUIET)
-find_package(Foundation CONFIG QUIET)
-
 # Bring in Slint's C++ bindings.
 # We're not really interested in the C++ bindings themselves, but the private headers and symbols.
 include(FetchContent)
@@ -75,8 +72,7 @@ add_subdirectory(Sources)
 add_subdirectory(Example)
 
 # CMake still cannot find XCTest, grrr…
-#
-# if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME AND BUILD_TESTING)
-#   enable_testing()
-#   add_subdirectory(Tests)
-# endif()
+if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME AND BUILD_TESTING)
+  enable_testing()
+  add_subdirectory(Tests)
+endif()
