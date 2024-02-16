@@ -33,7 +33,7 @@ public extension SlintApp {
             // Wait for the event loop to be ready before proceding.
             print("Waiting for loop to be ready…")
             await EventLoop.ready
-            
+
             print("Loop became ready, calling start().")
             try! await start()
 

@@ -19,7 +19,8 @@ public class SlintTimer {
     /// Deinitializer
     deinit {
         // If the timer exists, destroy it.
-        // This crashes if the Timer object is deinitialized before the idle task runs. IDK why.
+        // This crashes if the timer is destroyed immediately after being created, I suspect.
+        // The bodge solution is `WrappedClosure.holdOntoThis(self)`, meaning the wrapper hold a reference.
         if let id {
             slint_timer_destroy(id)
         }
