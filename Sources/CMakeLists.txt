@@ -9,9 +9,11 @@ list(APPEND SlintUI_LIB_SOURCE_FILES
 
   # Interpreter support
   Interpreter/Compiler.swift
+  Interpreter/ComponentDefinition.swift
 
   # Core library types
   Core/Timer.swift
+  Core/Callback.swift
 )
 
 add_library(SlintUI ${SlintUI_LIB_SOURCE_FILES})

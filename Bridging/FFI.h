@@ -46,10 +46,11 @@ IMPORT_PRIVATE_SLINT_TYPE(WindowProperties)
 
 IMPORT_PRIVATE_SLINT_TEMPLATE(Point2D)
 
-
-//
-// Platform functionality
-//
+/*************************
+ *
+ * Platform functionality
+ *
+ *************************/
 inline void slint_windowrc_init(WindowAdapterRcOpaque *out) {
     return slint::cbindgen_private::slint_windowrc_init(out);
 }
@@ -230,9 +231,11 @@ RendererPtr slint_skia_renderer_handle(SkiaRendererOpaque r) {
     return slint::cbindgen_private::slint_skia_renderer_handle(r);
 }
 
-//
-// Timer
-//
+/*************************
+ *
+ * Timer
+ *
+ *************************/
 uintptr_t slint_timer_start(uintptr_t id,
                             TimerMode mode,
                             uint64_t duration,
@@ -267,14 +270,16 @@ bool slint_timer_running(uintptr_t id) {
     return slint::cbindgen_private::slint_timer_running(id);
 }
 
-//
-// Interpreter API
-//
-
+/*************************
+ *
+ * Interpreter
+ *
+ *************************/
 #include "slint_interpreter_internal.h"
 
+//
 // Value
-
+//
 IMPORT_SLINT_TYPE(Image)
 
 IMPORT_SLINT_TEMPLATE(SharedVector)
@@ -389,7 +394,9 @@ const Image *slint_interpreter_value_to_image(const Value *val) {
     return slint::cbindgen_private::slint_interpreter_value_to_image(val);
 }
 
+//
 // Struct
+//
 
 /// Construct a new Struct in the given memory location
 void slint_interpreter_struct_new(StructOpaque *val) {
@@ -431,8 +438,9 @@ StructIteratorOpaque slint_interpreter_struct_make_iter(const StructOpaque *stru
     return slint::cbindgen_private::slint_interpreter_struct_make_iter(stru);
 }
 
+//
 // Component
-
+//
 
 /// Get a property. Returns a null pointer if the property does not exist.
 Value *slint_interpreter_component_instance_get_property(
@@ -702,4 +710,40 @@ bool slint_interpreter_component_definition_global_callbacks(
     SharedVector<SharedString> *names
 ) {
     return slint::cbindgen_private::slint_interpreter_component_definition_global_callbacks(def, global_name, names);
+}
+
+/*************************
+ *
+ * Callback
+ *
+ *************************/
+
+IMPORT_PRIVATE_SLINT_TYPE(CallbackOpaque)
+
+/// Initialize the callback.
+/// slint_callback_drop must be called.
+void slint_callback_init(CallbackOpaque *out) {
+    return slint::cbindgen_private::slint_callback_init(out);
+}
+
+/// Emit the callback
+void slint_callback_call(const CallbackOpaque *sig, const void *arg, void *ret) {
+    return slint::cbindgen_private::slint_callback_call(sig, arg, ret);
+}
+
+/// Set callback handler.
+///
+/// The binding has signature fn(user_data)
+void slint_callback_set_handler(
+    const CallbackOpaque *sig,
+    void (*binding)(void *user_data, const void *arg, void *ret),
+    void *user_data,
+    void (*drop_user_data)(void*)
+) {
+    return slint::cbindgen_private::slint_callback_set_handler(sig, binding, user_data, drop_user_data);
+}
+
+/// Destroy callback
+void slint_callback_drop(CallbackOpaque *handle) {
+    return slint::cbindgen_private::slint_callback_drop(handle);
 }
