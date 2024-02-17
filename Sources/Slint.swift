@@ -91,7 +91,7 @@ public extension SlintApp {
         // Switch Slint actor into 'main actor mode'
         SwitchToMainActorExecutor()
 
-        // Execute start
+        // Execute start.
         await Self.start()
 
         // Setup idle task.
