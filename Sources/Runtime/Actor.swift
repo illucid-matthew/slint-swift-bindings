@@ -65,16 +65,18 @@ final class SlintEventLoopExecutor: SerialExecutor {
 public struct SlintActor {
     /// Actor that uses the `SlintEventLoopExecutor` singleton to serialize access.
     public actor SlintEventLoop {
+        // Get the value from the file private global variable, so it can be swapped at runtime.
         public nonisolated var unownedExecutor: UnownedSerialExecutor { _executor }
     }
 
     public static var shared = SlintEventLoop()
 }
 
-// Global variables? Really?
-fileprivate var _executor = SlintEventLoopExecutor.shared.asUnownedSerialExecutor()
-// UNSAFE UNSAFE UNSAFE AND STUPID AND DUMB
-// Swapping executor mid-execution may have huge reprucutions that I can't even fathom.
+// Global variables? Oof.
+fileprivate var _executor = MainActor.sharedUnownedExecutor
+
+// Switching executor mid-flight seems to work, but this may actually be really stupid and dangerous
+// 💀 YOU HAVE BEEN WARNED 💀
 @MainActor
 func SwitchToMainActorExecutor() {
     _executor = MainActor.sharedUnownedExecutor
