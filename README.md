@@ -1,10 +1,34 @@
 # Slint bindings for Swift
 
+__Status__: 🚧 _Proof of concept_.
+
 Attempt at creating bindings for Slint in Swift, re-using the private FFI interface meant for the C++ bindings.
+
+_I'm not interested in finishing this_, but hopefully someone will.
+
+If not, it can at least serve as an example for:
+- Importing a `cbindgen`-generated FFI into Swift.
+- Wrapping Swift closures for use as C callbacks.
+- Creating wrapper classes over opaque-pointer based C interfaces.
+- Integrating Swift concurrency into an external event loop.
 
 See also: [WIP Python bindings](https://github.com/slint-ui/slint/pull/4155)
 
-__Status__: 🚧 _Under construction_.
+```swift
+import SlintUI
+
+@main
+struct ExampleApp: SlintApp {
+    static func start() {
+        print("⏰ Setting up a timer to fire in three seconds…")
+        
+        let timer = SlintTimer()
+        timer.willRun(after: 3000) {
+            print("⏰ Timer fired!")
+        }
+    }
+}
+```
 
 Currently implemented:
 
@@ -13,11 +37,12 @@ Currently implemented:
     - [x] Create module map for Slint FFI headers[^1]
     - [x] Configure build to enable Swift-C++ interop
     - [x] Call Slint FFI from Swift
-    - [ ] Testing
+    - [x] `SlintApp` protocol for creating applications
+    - [ ] Testing _(dammit CMake!)_
 - [ ] Core Library
     - [x] Starting and stopping the event loop
     - [x] Running callbacks from the event loop
-    - [ ] Timers
+    - [x] Timers
     - [ ] Core type conversions
         - [ ] Callback
         - [ ] Shared string
@@ -32,9 +57,9 @@ Currently implemented:
     - [ ] Value
     - [ ] Struct
     - [ ] Model
-    - [ ] Component compiler
-    - [ ] Component definition (created by component compiler)
-    - [ ] Component (created from component definition)
+    - [ ] Component compiler _(partial implementation)_
+    - [ ] Component definition
+    - [ ] Component
 
 > Note: List is weakly orderd.
 
@@ -44,23 +69,21 @@ Currently implemented:
 
 To build the example, run:
 
-    $ mkdir build
-    $ cmake -B build -GNinja
-    $ cmake --build build
-    $ ./build/Example/Example
+    $ mkdir build && cd build
+    $ cmake .. -GNinja
+    $ cmake --build .
+    $ ./Example/Example
 
-~~You should then see:~~
-_Note: This is out of date._
+You should then see:
 
-    Hello from the Swift application 🏗️!
-    Hello from the Swift library! 🔨
-    Setting up timer ⏰ (random value: 28)
-    Starting event loop 🔁
+    ⏰ Setting up a timer to fire in three seconds…
+    Created timer 1
+    Starting event loop.
 
-And then it will hang for 5 seconds. Then, you'll see:
+And then it will hang for 3 seconds. Then, you'll see:
 
-    Called from event loop 👍 (random value: 28)
-    Done! 🤓
+    ⏰ Timer fired!
+    😎 I was invoked from a unstructured task, after the event loop started!
 
 ## How It Works
 
@@ -189,9 +212,19 @@ So, to ensure safety, all types that directly call Slint's API are marked `@Slin
 
 This is directly integrated into the Swift concurrency model, so you can use asynchronous code in your application without worry.
 
+#### `@MainActor` with Slint
+
 ___That said___, any Swift code that attempts to run isolated to `@MainActor` will still have to wait until the event loop stops.
 If it becomes an issue, it may be possible to use `MainActor.assumeIsolated()` and `isSameExclusiveExecutionContext()` to 'prove' that `SlintActor` is basically equivalent to `MainActor`.
+
 Or maybe [this will save us](https://github.com/apple/swift-evolution/blob/main/proposals/0392-custom-actor-executors.md#overriding-the-mainactor-executor).
+
+#### `@SlintActor` within `start()`
+
+While `start()` is running, tasks isolated to the Slint actor are executed on the main actor.
+After `start()` finishes, the Slint actor is swapped to run jobs in the Slint event loop instead.
+
+This sleight-of-hand allows code run from `start()` to access Slint actor isolated types synchronously, before the event loop is even running.
 
 ## Addendums
 
