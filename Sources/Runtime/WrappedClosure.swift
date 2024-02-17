@@ -13,12 +13,10 @@ import Foundation
 /// This one is meant for the most common use case.
 /// 
 /// Note: this is only meant for Slint APIs which expected you to pass a function pointer to them.
-/// If you just need to run something in the Slint event loop, use `EventLoop.run(_:)` or `@SlintActor`.
+/// If you just need to run something in the Slint event loop, use `@SlintActor`.
 class WrappedClosure {
     /// Wrapped closure value. Runs with `SlintActor` isolation.
     private let invoke: @SlintActor () -> Void
-    /// Reference to thing. Used to allow timers to hold a reference without dying.
-    private var ref: AnyObject? = nil
 
     /// Initializer. Stores the closure.
     /// - Parameter closure: The Swift closure to wrap.
@@ -29,11 +27,6 @@ class WrappedClosure {
             assert(Thread.current.isMainThread, "Closure not running on main thread!")
             closure()
         }
-    }
-
-    /// Stupid way to ensure that an object doesn't disappear.
-    public func holdOntoThis(_ thing: AnyObject) {
-        ref = thing
     }
    
     /// Factory function. Creates a wrapped closure that captures a value.

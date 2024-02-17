@@ -8,6 +8,8 @@
 import SlintFFI
 
 /// Timer that can invoke a callback, once or periodically.
+/// 
+/// Note: This will leak if you call `willRun(_:_:)`, but never call 
 @SlintActor
 public class SlintTimer {
     /// Timer ID. Used a handle for the Slint FFI. 
@@ -20,7 +22,6 @@ public class SlintTimer {
     deinit {
         // If the timer exists, destroy it.
         // This crashes if the timer is destroyed immediately after being created, I suspect.
-        // The bodge solution is `WrappedClosure.holdOntoThis(self)`, meaning the wrapper hold a reference.
         if let id {
             slint_timer_destroy(id)
         }
@@ -54,6 +55,14 @@ public class SlintTimer {
         }
     }
 
+    /// Drop the current timer, if it exists.
+    public func drop() {
+        if let id {
+            slint_timer_destroy(id)
+            self.id = nil
+        }
+    }
+
     /// Restart the current timer, if stopped. Otherwise does nothing.
     public func restart() {
         if let id { slint_timer_restart(id) }
@@ -70,10 +79,10 @@ public class SlintTimer {
 
     /// Internal function, starts timer from the Slint event loop context.
     private func start(mode: TimerMode, duration: UInt64, closure: @SlintActor @escaping @Sendable () -> Void) {
-        // Create a wraper.
-        let wrapper = WrappedClosure(closure)
-        // Stupid hack to prevent the `Timer` from going out of scope and calling the deinitializer.
-        wrapper.holdOntoThis(self)
+        // Create a wraper, specifically retaining this object until the timer is dropped by Slint.
+        let wrapper = WrappedClosure {
+            withExtendedLifetime(self) { closure() }
+        }
 
         id = slint_timer_start(
             id ?? 0,                        // Assign a new ID if we don't already have one. Docs erroneously say `-1` is the correct value. 
