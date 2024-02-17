@@ -26,6 +26,7 @@ final class SlintEventLoopExecutor: SerialExecutor {
     public static let shared = SlintEventLoopExecutor()
 
     /// Execute the job in the Slint event loop. Required by `SerialExecutor`.
+    @inlinable
     public func enqueue(_ job: consuming ExecutorJob) {
 
         let unownedJob = UnownedJob(job)
@@ -64,8 +65,22 @@ final class SlintEventLoopExecutor: SerialExecutor {
 public struct SlintActor {
     /// Actor that uses the `SlintEventLoopExecutor` singleton to serialize access.
     public actor SlintEventLoop {
-        public nonisolated var unownedExecutor: UnownedSerialExecutor { SlintEventLoopExecutor.shared.asUnownedSerialExecutor() }
+        public nonisolated var unownedExecutor: UnownedSerialExecutor { _executor }
     }
 
-    public static let shared = SlintEventLoop()
+    public static var shared = SlintEventLoop()
+}
+
+// Global variables? Really?
+fileprivate var _executor = SlintEventLoopExecutor.shared.asUnownedSerialExecutor()
+// UNSAFE UNSAFE UNSAFE AND STUPID AND DUMB
+// Swapping executor mid-execution may have huge reprucutions that I can't even fathom.
+@MainActor
+func SwitchToMainActorExecutor() {
+    _executor = MainActor.sharedUnownedExecutor
+}
+
+@MainActor
+func SwitchToEventLoopExecutor() {
+    _executor = SlintEventLoopExecutor.shared.asUnownedSerialExecutor()
 }

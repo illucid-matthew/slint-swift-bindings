@@ -1,3 +1,5 @@
+// OLD EXAMPLE. Will be removed shortly!
+
 import Foundation
 import SlintUI
 
@@ -42,7 +44,7 @@ func test() async {
 }
 
 @main
-struct Main: SlintApp {
+struct Main: OldSlintApp {
     static func start() async {
         // await EventLoop.run { print("Hello from EventLoop.run!") }
         await test()

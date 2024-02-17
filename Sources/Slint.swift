@@ -7,24 +7,12 @@
 
 import SlintFFI
 
-/// TEMPORARY. Protocol for Slint apps.
-/// 
-/// Starts the Slint event loop, then enters your code.
-/// 
-/// ```swift
-/// @main
-/// struct MyApp: SlintApp {
-///     static func start() {…}
-/// }
-/// ```
-/// 
-/// To use this, implement `start()`. This function will be run at startup, in a seperate task.
-/// When it returns, the Slint event loop will be closed, and the application will exit.
-public protocol SlintApp {
-    static func start() async throws
+public protocol OldSlintApp {
+    /// Runs before the event loop has started.
+    static func start() async
 }
 
-public extension SlintApp {
+public extension OldSlintApp {
     /// Default implementation for `main()`, starting the event loop and concurrently running `start()`.
     static func main() async {
 
@@ -72,5 +60,50 @@ func idle() async {
         // Slint will set the value to UInt64.max if there is nothing waking it up.
         durationUntilUpdate = durationUntilUpdate > 100 ? 100 : durationUntilUpdate
         try! await Task.sleep(nanoseconds: durationUntilUpdate * 1_000_000)
+    }
+}
+
+/// Protocol for Slint applications.
+/// 
+/// Usage:
+/// ```swift
+/// @main
+/// struct MyApp: SlintApp {
+///     static func start() {
+///         …
+///     }
+/// }
+/// ```
+/// 
+/// You provide an implementation for `start()`, which sets up your UI.
+/// After it returns, the event loop will be started and run.
+public protocol SlintApp {
+    /// Setup UI before the main event loop is running.
+    /// 
+    /// Note: `async` is optional. Synchronous functions can fulfill asynchronous requirements.
+    @SlintActor static func start() async
+}
+
+public extension SlintApp {
+    /// Implementation for `main()`.
+    @MainActor
+    static func main() async {
+        // Switch Slint actor into 'main actor mode'
+        SwitchToMainActorExecutor()
+
+        // Execute start
+        await Self.start()
+
+        // Setup idle task.
+        let idleTask = Task.detached { await idle() }
+
+        // Switch Slint actor into 'event loop mode'
+        SwitchToEventLoopExecutor()
+
+        // Start the event loop
+        EventLoop.start()
+
+        // If that returns, cancel the idle task.
+        idleTask.cancel()
     }
 }

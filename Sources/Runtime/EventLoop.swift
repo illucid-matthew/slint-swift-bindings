@@ -23,7 +23,7 @@ import SlintFFI
 // Doh!
 
 /// Interface for the event loop.
-public class EventLoop {
+class EventLoop {
     /// Public singleton instance.
     public static var shared = EventLoop()
     private init() { }
