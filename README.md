@@ -4,7 +4,7 @@ __Status__: 🚧 _Proof of concept_.
 
 Attempt at creating bindings for Slint in Swift, re-using the private FFI interface meant for the C++ bindings.
 
-_I'm not interested in finishing this_, but hopefully someone will.
+I'm not interested in finishing this, but hopefully someone will.
 
 If not, it can at least serve as an example for:
 - Importing a `cbindgen`-generated FFI into Swift.
