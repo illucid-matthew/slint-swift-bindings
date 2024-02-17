@@ -747,3 +747,40 @@ void slint_callback_set_handler(
 void slint_callback_drop(CallbackOpaque *handle) {
     return slint::cbindgen_private::slint_callback_drop(handle);
 }
+
+/*************************
+ *
+ * Shared vector
+ *
+ *************************/
+
+/// From slint_sharedvector.h
+/// Note that the `std::atomic` wrapper on refcount is removed. We won't be using it 😎
+struct SharedVectorHeader
+{
+    std::intptr_t refcount;
+    std::size_t size;
+    std::size_t capacity;
+};
+
+/// This function is used for the low-level C++ interface to allocate the backing vector of a SharedVector.
+uint8_t *slint_shared_vector_allocate(
+    uintptr_t size,
+    uintptr_t align
+) {
+    return slint::cbindgen_private::slint_shared_vector_allocate(size, align);
+}
+
+/// This function is used for the low-level C++ interface to deallocate the backing vector of a SharedVector
+void slint_shared_vector_free(
+    uint8_t *ptr,
+    uintptr_t size,
+    uintptr_t align
+) {
+    return slint::cbindgen_private::slint_shared_vector_free(ptr, size, align);
+}
+
+/// This function is used for the low-level C++ interface to initialize the empty SharedVector.
+const uint8_t *slint_shared_vector_empty() {
+    return slint::cbindgen_private::slint_shared_vector_empty();
+}

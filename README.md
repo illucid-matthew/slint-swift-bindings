@@ -44,7 +44,7 @@ Currently implemented:
     - [x] Running callbacks from the event loop
     - [x] Timers
     - [ ] Core type conversions
-        - [ ] Callback
+        - [x] Callback _(bus error_ 💀 _)_
         - [ ] Shared string
         - [ ] Shared vector
         - [ ] Property
