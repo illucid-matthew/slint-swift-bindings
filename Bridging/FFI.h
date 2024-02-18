@@ -300,6 +300,9 @@ IMPORT_PRIVATE_SLINT_TYPE(ComponentCompilerOpaque)
 IMPORT_PRIVATE_SLINT_TEMPLATE(Box)
 IMPORT_PRIVATE_SLINT_TEMPLATE(Slice)
 
+// Custom alias for Slice<uint8_t>
+using StrSlice = Slice<uint8_t>;
+
 /// Construct a new Value in the given memory location
 Box<Value> slint_interpreter_value_new() {
     return slint::cbindgen_private::slint_interpreter_value_new();
@@ -413,13 +416,13 @@ void slint_interpreter_struct_destructor(StructOpaque *val) {
     return slint::cbindgen_private::slint_interpreter_struct_destructor(val);
 }
 
-Value *slint_interpreter_struct_get_field(const StructOpaque *stru, Slice<uint8_t> name) {
+Value *slint_interpreter_struct_get_field(const StructOpaque *stru, StrSlice name) {
     return slint::cbindgen_private::slint_interpreter_struct_get_field(stru, name);
 }
 
 void slint_interpreter_struct_set_field(
     StructOpaque *stru,
-    Slice<uint8_t> name,
+    StrSlice name,
     const Value *value
 ) {
     return slint::cbindgen_private::slint_interpreter_struct_set_field(stru, name, value);
@@ -430,7 +433,7 @@ void slint_interpreter_struct_iterator_destructor(StructIteratorOpaque *val) {
 }
 
 /// Advance the iterator and return the next value, or a null pointer
-Value *slint_interpreter_struct_iterator_next(StructIteratorOpaque *iter, Slice<uint8_t> *k) {
+Value *slint_interpreter_struct_iterator_next(StructIteratorOpaque *iter, StrSlice *k) {
     return slint::cbindgen_private::slint_interpreter_struct_iterator_next(iter, k);
 }
 
@@ -445,14 +448,14 @@ StructIteratorOpaque slint_interpreter_struct_make_iter(const StructOpaque *stru
 /// Get a property. Returns a null pointer if the property does not exist.
 Value *slint_interpreter_component_instance_get_property(
     const ErasedItemTreeBox *inst,
-    Slice<uint8_t> name
+    StrSlice name
 ) {
     return slint::cbindgen_private::slint_interpreter_component_instance_get_property(inst, name);
 }
 
 bool slint_interpreter_component_instance_set_property(
     const ErasedItemTreeBox *inst,
-    Slice<uint8_t> name,
+    StrSlice name,
     const Value *val
 ) {
     return slint::cbindgen_private::slint_interpreter_component_instance_set_property(inst, name, val);
@@ -461,7 +464,7 @@ bool slint_interpreter_component_instance_set_property(
 /// Invoke a callback or function. Returns raw boxed value on success and null ptr on failure.
 Value *slint_interpreter_component_instance_invoke(
     const ErasedItemTreeBox *inst,
-    Slice<uint8_t> name,
+    StrSlice name,
     Slice<Box<Value>> args
 ) {
     return slint::cbindgen_private::slint_interpreter_component_instance_invoke(inst, name, args);
@@ -471,7 +474,7 @@ Value *slint_interpreter_component_instance_invoke(
 /// The `callback` function must initialize the `ret` (the `ret` passed to the callback is initialized and is assumed initialized after the function)
 bool slint_interpreter_component_instance_set_callback(
     const ErasedItemTreeBox *inst,
-    Slice<uint8_t> name,
+    StrSlice name,
     Box<Value> (*callback)(void *user_data, Slice<Box<Value>> arg),
     void *user_data,
     void (*drop_user_data)(void*)
@@ -482,16 +485,16 @@ bool slint_interpreter_component_instance_set_callback(
 /// Get a global property. Returns a raw boxed value on success; nullptr otherwise.
 Value *slint_interpreter_component_instance_get_global_property(
     const ErasedItemTreeBox *inst,
-    Slice<uint8_t> global,
-    Slice<uint8_t> property_name
+    StrSlice global,
+    StrSlice property_name
 ) {
     return slint::cbindgen_private::slint_interpreter_component_instance_get_global_property(inst, global, property_name);
 }
 
 bool slint_interpreter_component_instance_set_global_property(
     const ErasedItemTreeBox *inst,
-    Slice<uint8_t> global,
-    Slice<uint8_t> property_name,
+    StrSlice global,
+    StrSlice property_name,
     const Value *val
 ) {
     return slint::cbindgen_private::slint_interpreter_component_instance_set_global_property(inst, global, property_name, val);
@@ -500,8 +503,8 @@ bool slint_interpreter_component_instance_set_global_property(
 /// The `callback` function must initialize the `ret` (the `ret` passed to the callback is initialized and is assumed initialized after the function)
 bool slint_interpreter_component_instance_set_global_callback(
     const ErasedItemTreeBox *inst,
-    Slice<uint8_t> global,
-    Slice<uint8_t> name,
+    StrSlice global,
+    StrSlice name,
     Box<Value> (*callback)(void *user_data, Slice<Box<Value>> arg),
     void *user_data,
     void (*drop_user_data)(void*)
@@ -512,8 +515,8 @@ bool slint_interpreter_component_instance_set_global_callback(
 /// Invoke a global callback or function. Returns raw boxed value on success; nullptr otherwise.
 Value *slint_interpreter_component_instance_invoke_global(
     const ErasedItemTreeBox *inst,
-    Slice<uint8_t> global,
-    Slice<uint8_t> callable_name,
+    StrSlice global,
+    StrSlice callable_name,
     Slice<Box<Value>> args
 ) {
     return slint::cbindgen_private::slint_interpreter_component_instance_invoke_global(inst, global, callable_name, args);
@@ -604,7 +607,7 @@ void slint_interpreter_component_compiler_set_include_paths(
 
 void slint_interpreter_component_compiler_set_style(
     ComponentCompilerOpaque *compiler,
-    Slice<uint8_t> style
+    StrSlice style
 ) {
     return slint::cbindgen_private::slint_interpreter_component_compiler_set_style(compiler, style);
 }
@@ -632,8 +635,8 @@ void slint_interpreter_component_compiler_get_diagnostics(
 
 bool slint_interpreter_component_compiler_build_from_source(
     ComponentCompilerOpaque *compiler,
-    Slice<uint8_t> source_code,
-    Slice<uint8_t> path,
+    StrSlice source_code,
+    StrSlice path,
     ComponentDefinitionOpaque *component_definition_ptr
 ) {
     return slint::cbindgen_private::slint_interpreter_component_compiler_build_from_source(compiler, source_code, path, component_definition_ptr);
@@ -641,7 +644,7 @@ bool slint_interpreter_component_compiler_build_from_source(
 
 bool slint_interpreter_component_compiler_build_from_path(
     ComponentCompilerOpaque *compiler,
-    Slice<uint8_t> path,
+    StrSlice path,
     ComponentDefinitionOpaque *component_definition_ptr
 ) {
     return slint::cbindgen_private::slint_interpreter_component_compiler_build_from_path(compiler, path, component_definition_ptr);
@@ -696,7 +699,7 @@ void slint_interpreter_component_definition_globals(
 /// singleton. Returns true if a global exists under the specified name; false otherwise.
 bool slint_interpreter_component_definition_global_properties(
     const ComponentDefinitionOpaque *def,
-    Slice<uint8_t> global_name,
+    StrSlice global_name,
     SharedVector<PropertyDescriptor> *properties
 ) {
     return slint::cbindgen_private::slint_interpreter_component_definition_global_properties(def, global_name, properties);
@@ -706,7 +709,7 @@ bool slint_interpreter_component_definition_global_properties(
 /// singleton. Returns true if a global exists under the specified name; false otherwise.
 bool slint_interpreter_component_definition_global_callbacks(
     const ComponentDefinitionOpaque *def,
-    Slice<uint8_t> global_name,
+    StrSlice global_name,
     SharedVector<SharedString> *names
 ) {
     return slint::cbindgen_private::slint_interpreter_component_definition_global_callbacks(def, global_name, names);
